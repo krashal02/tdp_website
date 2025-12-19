@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Timetable Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 25px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .content {
+            display: none;
+        }
+
+        .content.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-info {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #2563eb;
+        }
+
+        .subject-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .subject-item {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 5px solid #667eea;
+        }
+
+        .subject-item h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .subject-item p {
+            color: #666;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 5px solid #10b981;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 5px solid #ef4444;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+
+        .time-col {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .class-box {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #92400e;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .class-box:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .class-box.color-1 { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #991b1b; }
+        .class-box.color-2 { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #065f46; }
+        .class-box.color-3 { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; }
+        .class-box.color-4 { background: linear-gradient(135deg, #ede9fe, #ddd6fe); color: #5b21b6; }
+        .class-box.color-5 { background: linear-gradient(135deg, #cffafe, #a5f3fc); color: #164e63; }
+        .class-box.color-6 { background: linear-gradient(135deg, #fce7f3, #fbcfe8); color: #9f1239; }
+
+        .empty-slot {
+            background: #f9fafb;
+            color: #9ca3af;
+            font-style: italic;
+        }
+
+        .section-tabs {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .section-tab {
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .section-tab.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .timetable-section {
+            display: none;
+        }
+
+        .timetable-section.active {
+            display: block;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            margin-top: 5px;
+        }
+
+        .config-box {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border-left: 5px solid #10b981;
+        }
+
+        .config-box h3 {
+            color: #065f46;
+            margin-bottom: 10px;
+        }
+
+        .config-box p {
+            color: #047857;
+            font-size: 16px;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .header, .tabs, .export-buttons, .section-tabs, .btn {
+                display: none !important;
+            }
+            .card {
+                box-shadow: none;
+                page-break-after: always;
+            }
+            .timetable-section {
+                display: block !important;
+            }
+            table {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 Smart Timetable Generator</h1>
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('setup')">⚙️ Setup</button>
+                <button class="tab" onclick="showTab('subjects')">📚 Add Subjects</button>
+                <button class="tab" onclick="showTab('timetable')">📅 View Timetable</button>
+            </div>
+        </div>
+
+        <div id="alerts"></div>
+
+        <!-- Setup Tab -->
+        <div id="setup" class="content active">
+            <div class="card">
+                <h2>⚙️ Configure Sections</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Number of Sections</label>
+                        <select id="numSections">
+                            <option value="1">1 Section</option>
+                            <option value="2">2 Sections</option>
+                            <option value="3" selected>3 Sections</option>
+                            <option value="4">4 Sections</option>
+                            <option value="5">5 Sections</option>
+                            <option value="6">6 Sections</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Section Names (comma separated)</label>
+                        <input type="text" id="sectionNames" value="A, B, C" placeholder="e.g., A, B, C, D">
+                    </div>
+                </div>
+                <button class="btn btn-success" onclick="saveConfig()">💾 Save Configuration</button>
+                
+                <div id="configDisplay" style="display: none;" class="config-box">
+                    <h3>✅ Configuration Saved!</h3>
+                    <p id="configText"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subjects Tab -->
+        <div id="subjects" class="content">
+            <div class="card">
+                <h2>📚 Add Subject Details</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Subject Name</label>
+                        <input type="text" id="subjectName" placeholder="e.g., Mathematics">
+                    </div>
+                    <div class="form-group">
+                        <label>Teacher Name</label>
+                        <input type="text" id="teacherName" placeholder="e.g., Dr. John Smith">
+                    </div>
+                    <div class="form-group">
+                        <label>Classroom</label>
+                        <input type="text" id="classroom" placeholder="e.g., Room 101">
+                    </div>
+                    <div class="form-group">
+                        <label>Classes Per Week (Per Section)</label>
+                        <select id="classesPerWeek">
+                            <option value="2">2 Classes</option>
+                            <option value="3">3 Classes</option>
+                            <option value="4" selected>4 Classes</option>
+                            <option value="5">5 Classes</option>
+                            <option value="6">6 Classes</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="addSubject()">➕ Add Subject</button>
+                <button class="btn btn-secondary" onclick="clearForm()">🔄 Clear</button>
+            </div>
+
+            <div class="card">
+                <h2>📋 Added Subjects (<span id="subjectCount">0</span>)</h2>
+                <button class="btn btn-success" onclick="generateTimetable()">🎯 Generate Timetable</button>
+                <button class="btn btn-danger" onclick="clearAll()">🗑️ Clear All</button>
+                <div id="subjectsList" class="subject-list"></div>
+            </div>
+        </div>
+
+        <!-- Timetable Tab -->
+        <div id="timetable" class="content">
+            <div class="card">
+                <h2>📅 Generated Timetables</h2>
+                <div id="noTimetable" style="text-align: center; padding: 50px; color: #666;">
+                    <h3>No timetable generated yet</h3>
+                    <p>Please configure sections, add subjects, and click "Generate Timetable"</p>
+                </div>
+                <div id="timetableDisplay" style="display: none;">
+                    <div class="export-buttons">
+                        <button class="btn btn-info" onclick="downloadPDF()">📥 Download PDF</button>
+                        <button class="btn btn-info" onclick="printTimetable()">🖨️ Print Timetable</button>
+                        <button class="btn btn-secondary" onclick="downloadAllSections()">📦 Download All Sections</button>
+                    </div>
+                    <div class="stats" id="stats"></div>
+                    <div class="section-tabs" id="sectionTabs"></div>
+                    <div id="timetableContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let subjects = [];
+        let sections = ['A', 'B', 'C'];
+        let timetables = {};
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+        const times = ['8:00-9:00', '9:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-1:00', '1:00-2:00', '2:00-3:00'];
+
+        function showTab(tabName) {
+            document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function showAlert(message, type) {
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            document.getElementById('alerts').appendChild(alert);
+            setTimeout(() => alert.remove(), 3000);
+        }
+
+        function saveConfig() {
+            const num = parseInt(document.getElementById('numSections').value);
+            const names = document.getElementById('sectionNames').value.trim();
+            
+            if (!names) {
+                showAlert('Please enter section names!', 'error');
+                return;
+            }
+
+            sections = names.split(',').map(s => s.trim()).filter(s => s).slice(0, num);
+            
+            if (sections.length !== num) {
+                showAlert('Number of sections does not match names!', 'error');
+                return;
+            }
+
+            document.getElementById('configDisplay').style.display = 'block';
+            document.getElementById('configText').textContent = `Sections: ${sections.join(', ')} (Total: ${sections.length})`;
+            showAlert('Configuration saved successfully!', 'success');
+        }
+
+        function clearForm() {
+            document.getElementById('subjectName').value = '';
+            document.getElementById('teacherName').value = '';
+            document.getElementById('classroom').value = '';
+            document.getElementById('classesPerWeek').value = '4';
+        }
+
+        function addSubject() {
+            const name = document.getElementById('subjectName').value.trim();
+            const teacher = document.getElementById('teacherName').value.trim();
+            const classroom = document.getElementById('classroom').value.trim();
+            const classes = parseInt(document.getElementById('classesPerWeek').value);
+
+            if (!name || !teacher || !classroom) {
+                showAlert('Please fill all fields!', 'error');
+                return;
+            }
+
+            subjects.push({
+                id: Date.now(),
+                name: name,
+                teacher: teacher,
+                classroom: classroom,
+                classesPerWeek: classes
+            });
+
+            renderSubjects();
+            clearForm();
+            showAlert('Subject added successfully!', 'success');
+        }
+
+        function renderSubjects() {
+            document.getElementById('subjectCount').textContent = subjects.length;
+            const container = document.getElementById('subjectsList');
+            
+            if (subjects.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 30px;">No subjects added yet</p>';
+                return;
+            }
+
+            container.innerHTML = subjects.map(s => `
+                <div class="subject-item">
+                    <h4>📚 ${s.name}</h4>
+                    <p>👨‍🏫 Teacher: ${s.teacher}</p>
+                    <p>🏫 Classroom: ${s.classroom}</p>
+                    <p>📊 Classes/Week: ${s.classesPerWeek} per section</p>
+                    <button class="btn btn-danger" style="margin-top: 10px; width: 100%;" onclick="deleteSubject(${s.id})">🗑️ Delete</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteSubject(id) {
+            subjects = subjects.filter(s => s.id !== id);
+            renderSubjects();
+            showAlert('Subject deleted!', 'success');
+        }
+
+        function clearAll() {
+            if (subjects.length === 0) return;
+            if (confirm('Delete all subjects?')) {
+                subjects = [];
+                timetables = {};
+                renderSubjects();
+                document.getElementById('noTimetable').style.display = 'block';
+                document.getElementById('timetableDisplay').style.display = 'none';
+                showAlert('All subjects cleared!', 'success');
+            }
+        }
+
+        function generateTimetable() {
+            if (subjects.length === 0) {
+                showAlert('Please add subjects first!', 'error');
+                return;
+            }
+
+            // Initialize empty timetables for all sections
+            timetables = {};
+            sections.forEach(section => {
+                timetables[section] = days.map(() => Array(times.length).fill(null));
+            });
+
+            // CRITICAL: Track which teacher teaches which subject in which section
+            // Format: "subject-section" -> teacher name
+            // This ensures only ONE teacher per subject per section
+            const subjectSectionTeacher = {};
+
+            // Group subjects by subject name to assign teachers to sections
+            const subjectGroups = {};
+            subjects.forEach(subject => {
+                if (!subjectGroups[subject.name]) {
+                    subjectGroups[subject.name] = [];
+                }
+                subjectGroups[subject.name].push(subject);
+            });
+
+            // Assign teachers to sections for each subject
+            Object.keys(subjectGroups).forEach(subjectName => {
+                const teachers = subjectGroups[subjectName];
+                sections.forEach((section, idx) => {
+                    // Assign teacher in round-robin fashion
+                    const teacher = teachers[idx % teachers.length];
+                    subjectSectionTeacher[`${subjectName}-${section}`] = teacher;
+                });
+            });
+
+            // Global teacher schedule tracker: tracks which teacher is busy at what time
+            const teacherSchedule = {}; // Format: "teacher-dayIdx-timeIdx" -> true
+
+            // Track teacher daily class count per section
+            const teacherDayCount = {}; // Format: "teacher-section-dayIdx" -> count
+
+            // Track subject daily class count per section (max 1 class per day per subject per section)
+            const subjectDayCount = {}; // Format: "subject-section-dayIdx" -> count
+
+            // Schedule classes for each subject across all sections
+            Object.keys(subjectGroups).forEach((subjectName, subjectIdx) => {
+                sections.forEach(section => {
+                    // Get the assigned teacher for this subject in this section
+                    const assignedTeacher = subjectSectionTeacher[`${subjectName}-${section}`];
+                    
+                    let scheduled = 0;
+                    const maxAttempts = 500;
+                    let attempts = 0;
+
+                    while (scheduled < assignedTeacher.classesPerWeek && attempts < maxAttempts) {
+                        attempts++;
+
+                        // Randomly select a day and time
+                        const dIdx = Math.floor(Math.random() * days.length);
+                        const tIdx = Math.floor(Math.random() * times.length);
+
+                        // Check if slot is already occupied in this section
+                        if (timetables[section][dIdx][tIdx] !== null) {
+                            continue;
+                        }
+
+                        // Check if teacher is already teaching another section at this time
+                        const teacherTimeKey = `${assignedTeacher.teacher}-${dIdx}-${tIdx}`;
+                        if (teacherSchedule[teacherTimeKey]) {
+                            continue; // Teacher is busy
+                        }
+
+                        // Check daily limit: max 2 classes per teacher per day per section
+                        const teacherDayKey = `${assignedTeacher.teacher}-${section}-${dIdx}`;
+                        const currentDayCount = teacherDayCount[teacherDayKey] || 0;
+                        if (currentDayCount >= 2) {
+                            continue;
+                        }
+
+                        // Check daily limit: max 1 class per subject per day per section
+                        const subjectDayKey = `${subjectName}-${section}-${dIdx}`;
+                        const subjectDayClassCount = subjectDayCount[subjectDayKey] || 0;
+                        if (subjectDayClassCount >= 1) {
+                            continue;
+                        }
+
+                        // All checks passed - schedule the class
+                        timetables[section][dIdx][tIdx] = {
+                            subject: subjectName,
+                            teacher: assignedTeacher.teacher,
+                            classroom: assignedTeacher.classroom,
+                            color: `color-${(subjectIdx % 6) + 1}`
+                        };
+
+                        // Update tracking objects
+                        teacherSchedule[teacherTimeKey] = true;
+                        teacherDayCount[teacherDayKey] = currentDayCount + 1;
+                        subjectDayCount[subjectDayKey] = subjectDayClassCount + 1;
+                        scheduled++;
+                    }
+
+                    // Warn if couldn't schedule all classes
+                    if (scheduled < assignedTeacher.classesPerWeek) {
+                        console.warn(`Could only schedule ${scheduled}/${assignedTeacher.classesPerWeek} classes for ${subjectName} by ${assignedTeacher.teacher} in section ${section}`);
+                    }
+                });
+            });
+
+            renderTimetables();
+            showAlert('Timetable generated successfully!', 'success');
+            setTimeout(() => showTab('timetable'), 800);
+        }
+
+        function renderTimetables() {
+            document.getElementById('noTimetable').style.display = 'none';
+            document.getElementById('timetableDisplay').style.display = 'block';
+            
+            const total = Object.values(timetables).reduce((sum, tt) => 
+                sum + tt.flat().filter(c => c !== null).length, 0);
+            
+            document.getElementById('stats').innerHTML = `
+                <div class="stat-box">
+                    <div class="stat-number">${subjects.length}</div>
+                    <div class="stat-label">Subjects</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">${sections.length}</div>
+                    <div class="stat-label">Sections</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">${total}</div>
+                    <div class="stat-label">Total Classes</div>
+                </div>
+            `;
+            
+            document.getElementById('sectionTabs').innerHTML = sections.map((sec, idx) => 
+                `<div class="section-tab ${idx === 0 ? 'active' : ''}" onclick="showSection('${sec}')">${sec}</div>`
+            ).join('');
+            
+            document.getElementById('timetableContainer').innerHTML = sections.map((sec, idx) => `
+                <div class="timetable-section ${idx === 0 ? 'active' : ''}" id="table-${sec}">
+                    <h3 style="color: #667eea; margin: 20px 0;">Section ${sec} - Weekly Timetable</h3>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    ${days.map(d => `<th>${d}</th>`).join('')}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${times.map((time, tIdx) => `
+                                    <tr>
+                                        <td class="time-col">${time}</td>
+                                        ${days.map((day, dIdx) => {
+                                            const slot = timetables[sec][dIdx][tIdx];
+                                            return slot ? `
+                                                <td>
+                                                    <div class="class-box ${slot.color}">
+                                                        <div style="font-size: 16px; margin-bottom: 5px;">${slot.subject}</div>
+                                                        <div style="font-size: 13px;">👨‍🏫 ${slot.teacher}</div>
+                                                        <div style="font-size: 12px;">🏫 ${slot.classroom}</div>
+                                                    </div>
+                                                </td>
+                                            ` : '<td><div class="class-box empty-slot">Free Period</div></td>';
+                                        }).join('')}
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showSection(sec) {
+            document.querySelectorAll('.section-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.timetable-section').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(`table-${sec}`).classList.add('active');
+        }
+
+        function printTimetable() {
+            window.print();
+        }
+
+        function downloadPDF() {
+            const activeSection = document.querySelector('.section-tab.active').textContent;
+            const element = document.getElementById(`table-${activeSection}`);
+            
+            const opt = {
+                margin: 10,
+                filename: `Timetable_Section_${activeSection}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            const clone = element.cloneNode(true);
+            const title = document.createElement('div');
+            title.style.cssText = 'text-align: center; margin-bottom: 20px; color: #667eea; font-size: 24px; font-weight: bold;';
+            title.textContent = `🎓 Smart Timetable - Section ${activeSection}`;
+            clone.insertBefore(title, clone.firstChild);
+
+            html2pdf().set(opt).from(clone).save();
+        }
+
+        function downloadAllSections() {
+            let currentIndex = 0;
+            
+            function downloadNext() {
+                if (currentIndex >= sections.length) {
+                    showAlert('All timetables downloaded!', 'success');
+                    return;
+                }
+                
+                const section = sections[currentIndex];
+                const element = document.getElementById(`table-${section}`);
+                
+                const opt = {
+                    margin: 10,
+                    filename: `Timetable_Section_${section}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+                };
+
+                const clone = element.cloneNode(true);
+                const title = document.createElement('div');
+                title.style.cssText = 'text-align: center; margin-bottom: 20px; color: #667eea; font-size: 24px; font-weight: bold;';
+                title.textContent = `🎓 Smart Timetable - Section ${section}`;
+                clone.insertBefore(title, clone.firstChild);
+
+                html2pdf().set(opt).from(clone).save().then(() => {
+                    currentIndex++;
+                    setTimeout(downloadNext, 1000);
+                });
+            }
+            
+            showAlert('Downloading all sections...', 'success');
+            downloadNext();
+        }
+
+        renderSubjects();
+    </script>
+</body>
+</html>
